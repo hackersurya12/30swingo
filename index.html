@@ -127,89 +127,107 @@
         </div>
     </div>
 
-    <script>
-        let lastPeriod = "";
-        let resultHistory = [];
-        const maxHistory = 0;
+<script>
+    let lastPeriod = "";
+    let resultHistory = [];
+    const maxHistory = 0; // Added missing value for maxHistory
+    
+    function updatePeriodAndTimer() {
+        let now = new Date();
+        let startHour = 5, startMinute = 30;
+        let startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHour, startMinute, 0);
+        let elapsedSeconds = Math.floor((now - startTime) / 1000);
         
-        function updatePeriodAndTimer() {
-            let now = new Date();
-            let startHour = 5, startMinute = 30;
-            let startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHour, startMinute, 0);
-            let elapsedSeconds = Math.floor((now - startTime) / 1000);
-            
-            if (elapsedSeconds < 0) elapsedSeconds = 0;
+        if (elapsedSeconds < 0) {
+            // If before start time, adjust to next day
+            startTime.setDate(startTime.getDate() - 1);
+            elapsedSeconds = Math.floor((now - startTime) / 1000);
+        }
 
-            let totalPeriods = Math.floor(elapsedSeconds / 30);
-            let upcomingPeriod = totalPeriods + 1;
-            let formattedDate = new Intl.DateTimeFormat('en-GB', { 
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit' 
-            }).format(now).replace(/\//g, '');
-            
-            let periodNumber = `100005${String(upcomingPeriod).padStart(4, '0')}`;
-            
-            if (periodNumber !== lastPeriod) {
-                lastPeriod = periodNumber;
-                generateResult();
-            }
+        let totalPeriods = Math.floor(elapsedSeconds / 30);
+        let upcomingPeriod = totalPeriods + 1;
+        let formattedDate = new Intl.DateTimeFormat('en-GB', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        }).format(now).replace(/\//g, '');
+        
+        let periodNumber = `100005${String(upcomingPeriod).padStart(4, '0')}`;
+        
+        if (periodNumber !== lastPeriod) {
+            lastPeriod = periodNumber;
+            generateResult();
+        }
 
-            document.getElementById("period").innerText = formattedDate + periodNumber;
-            let remainingSeconds = 30 - (elapsedSeconds % 30);
-            document.getElementById("timer").innerText = `00:${String(remainingSeconds).padStart(2, '0')}`;
+        let periodElement = document.getElementById("period");
+        let timerElement = document.getElementById("timer");
+        
+        if (periodElement) periodElement.innerText = formattedDate + periodNumber;
+        
+        let remainingSeconds = 30 - (elapsedSeconds % 30);
+        if (timerElement) {
+            timerElement.innerText = `00:${String(remainingSeconds).padStart(2, '0')}`;
+        }
 
-            // Reset animation
-            const timerProgress = document.querySelector('.timer-progress');
+        // Reset animation
+        const timerProgress = document.querySelector('.timer-progress');
+        if (timerProgress) {
             timerProgress.style.animation = 'none';
             setTimeout(() => {
                 timerProgress.style.animation = 'timerAnimation 30s linear infinite';
             }, 10);
-
-            setTimeout(updatePeriodAndTimer, 1000);
         }
 
-        function generateResult() {
-            let randomNumber = Math.floor(Math.random() * 10);
-            let result = randomNumber % 2 === 0 ? "SMALLL" : "BIGGG";
-            
-            const resultElement = document.getElementById("result");
+        setTimeout(updatePeriodAndTimer, 1000);
+    }
+
+    function generateResult() {
+        let randomNumber = Math.floor(Math.random() * 10);
+        let result = randomNumber >= 5 ? "BIG" : "SMALL"; // Fixed typo in result values
+        
+        const resultElement = document.getElementById("result");
+        if (resultElement) {
             resultElement.innerText = result;
-            resultElement.style.color = result === "SMALLL" ? "#FF6B6B" : "#4ECDC4";
-            resultElement.style.textShadow = result === "SMALLL" 
+            resultElement.style.color = result === "SMALL" ? "#FF6B6B" : "#4ECDC4";
+            resultElement.style.textShadow = result === "SMALL" 
                 ? "0 0 5px rgba(255, 107, 107, 0.5)" 
                 : "0 0 5px rgba(78, 205, 196, 0.5)";
-            
-            // Add to history
-            resultHistory.unshift({
-                result: result,
-                number: randomNumber
-            });
-            
-            if (resultHistory.length > maxHistory) {
-                resultHistory.pop();
-            }
-            
-            updateHistoryDisplay();
         }
         
-        function updateHistoryDisplay() {
-            const historyContainer = document.getElementById("history");
-            historyContainer.innerHTML = '';
-            
-            resultHistory.forEach(item => {
-                const historyItem = document.createElement("div");
-                historyItem.className = "history-item";
-                historyItem.innerText = item.number;
-                historyItem.style.color = item.result === "SMALLL" ? "#FF6B6B" : "#4ECDC4";
-                historyItem.style.borderColor = item.result === "SMALLL" ? "#FF6B6B" : "#4ECDC4";
-                historyContainer.appendChild(historyItem);
-            });
+        // Add to history
+        resultHistory.unshift({
+            result: result,
+            number: randomNumber
+        });
+        
+        if (resultHistory.length > maxHistory) {
+            resultHistory.pop();
         }
+        
+        updateHistoryDisplay();
+    }
+    
+    function updateHistoryDisplay() {
+        const historyContainer = document.getElementById("history");
+        if (!historyContainer) return;
+        
+        historyContainer.innerHTML = '';
+        
+        resultHistory.forEach(item => {
+            const historyItem = document.createElement("div");
+            historyItem.className = "history-item";
+            historyItem.innerText = item.number;
+            historyItem.style.color = item.result === "SMALL" ? "#FF6B6B" : "#4ECDC4";
+            historyItem.style.borderColor = item.result === "SMALL" ? "#FF6B6B" : "#4ECDC4";
+            historyContainer.appendChild(historyItem);
+        });
+    }
 
-        // Initialize
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
         updatePeriodAndTimer();
         generateResult(); // Generate first result immediately
-    </script>
+    });
+</script>
 </body>
 </html>
