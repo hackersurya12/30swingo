@@ -113,9 +113,9 @@
         </div>
         
         <div class="result-box">
-            <p><span>Period:</span> <span id="period">000000</span></p>
-            <p><span>Timer:</span> <span id="timer">00:30</span></p>
-            <p><span>Result:</span> <span id="result" class="result-text">Pending...</span></p>
+            <p><span>PERIOD:</span> <span id="period">000000</span></p>
+            <p><span>TIMER:</span> <span id="timer">00:30</span></p>
+            <p><span>RESULT:</span> <span id="result" class="result-text">Pending...</span></p>
         </div>
         
         <div class="history" id="history">
@@ -131,7 +131,7 @@
     let lastPeriod = "";
     let resultHistory = [];
     const maxHistory = 0; // Added missing value for maxHistory
-    
+
     function updatePeriodAndTimer() {
         let now = new Date();
         let startHour = 5, startMinute = 30;
@@ -182,9 +182,13 @@
     }
 
     function generateResult() {
-        let randomNumber = Math.floor(Math.random() * 10);
-        let result = randomNumber >= 5 ? "BIG" : "SMALL"; // Fixed typo in result values
-        
+        // Fixed random number per 30-second window
+        let now = new Date();
+        let seed = Math.floor(now.getTime() / 30000); // 30-second window seed
+        let hash = seed.toString().split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+        let randomNumber = hash % 10;
+        let result = randomNumber >= 5 ? "BIG" : "SMALL";
+
         const resultElement = document.getElementById("result");
         if (resultElement) {
             resultElement.innerText = result;
@@ -193,20 +197,19 @@
                 ? "0 0 5px rgba(255, 107, 107, 0.5)" 
                 : "0 0 5px rgba(78, 205, 196, 0.5)";
         }
-        
-        // Add to history
+
         resultHistory.unshift({
             result: result,
             number: randomNumber
         });
-        
+
         if (resultHistory.length > maxHistory) {
             resultHistory.pop();
         }
-        
+
         updateHistoryDisplay();
     }
-    
+
     function updateHistoryDisplay() {
         const historyContainer = document.getElementById("history");
         if (!historyContainer) return;
