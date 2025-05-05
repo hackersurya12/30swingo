@@ -113,9 +113,9 @@
         </div>
         
         <div class="result-box">
-            <p><span>PERIOD:</span> <span id="period">000000</span></p>
-            <p><span>TIMER:</span> <span id="timer">00:30</span></p>
-            <p><span>RESULT:</span> <span id="result" class="result-text">Pending...</span></p>
+            <p><span>Period:</span> <span id="period">000000</span></p>
+            <p><span>Timer:</span> <span id="timer">00:30</span></p>
+            <p><span>Result:</span> <span id="result" class="result-text">Pending...</span></p>
         </div>
         
         <div class="history" id="history">
@@ -130,7 +130,7 @@
 <script>
     let lastPeriod = "";
     let resultHistory = [];
-    const maxHistory = 0; // Added missing value for maxHistory
+    const maxHistory = 10; // Show last 10 results
 
     function updatePeriodAndTimer() {
         let now = new Date();
@@ -153,10 +153,11 @@
         }).format(now).replace(/\//g, '');
         
         let periodNumber = `100005${String(upcomingPeriod).padStart(4, '0')}`;
+        let lastFourDigits = periodNumber.slice(-4);
         
         if (periodNumber !== lastPeriod) {
             lastPeriod = periodNumber;
-            generateResult();
+            generateResult(lastFourDigits);
         }
 
         let periodElement = document.getElementById("period");
@@ -181,13 +182,22 @@
         setTimeout(updatePeriodAndTimer, 1000);
     }
 
-    function generateResult() {
-        // Fixed random number per 30-second window
-        let now = new Date();
-        let seed = Math.floor(now.getTime() / 30000); // 30-second window seed
-        let hash = seed.toString().split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-        let randomNumber = hash % 10;
-        let result = randomNumber >= 5 ? "BIG" : "SMALL";
+    function generateResult(lastFourDigits) {
+        // New prediction method based on last 4 digits of period number
+        let digits = lastFourDigits.split('').map(Number);
+        
+        // Calculate sum of digits
+        let sum = digits.reduce((a, b) => a + b, 0);
+        
+        // Calculate product of digits
+        let product = digits.reduce((a, b) => a * b, 1);
+        
+        // Combine sum and product for prediction
+        let predictionValue = (sum + product) % 10;
+        
+        // Determine result based on prediction value
+        let result = predictionValue >= 5 ? "BIG" : "SMALL";
+        let resultNumber = predictionValue;
 
         const resultElement = document.getElementById("result");
         if (resultElement) {
@@ -198,11 +208,13 @@
                 : "0 0 5px rgba(78, 205, 196, 0.5)";
         }
 
+        // Add to history
         resultHistory.unshift({
             result: result,
-            number: randomNumber
+            number: resultNumber
         });
 
+        // Keep only last maxHistory results
         if (resultHistory.length > maxHistory) {
             resultHistory.pop();
         }
@@ -229,7 +241,7 @@
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
         updatePeriodAndTimer();
-        generateResult(); // Generate first result immediately
+        // Generate first result will happen automatically after first period check
     });
 </script>
 </body>
